@@ -76,4 +76,17 @@ class RcsvParseTest < Test::Unit::TestCase
 
     assert_equal([["b", 2, false], ["c", 3, false]], parsed_data)
   end
+
+  if String.instance_methods.include?(:encoding)
+    def test_rcsv_parse_encoding
+      utf8_csv = "a,b,c".force_encoding("UTF-8")
+      ascii_csv = "a,b,c".force_encoding("ASCII-8BIT")
+      
+      parsed_utf8_data = Rcsv.parse(utf8_csv, :header => :none)
+      parsed_ascii_data = Rcsv.parse(ascii_csv, :header => :none)
+      
+      assert_equal(parsed_utf8_data.first.first.encoding, Encoding::UTF_8)
+      assert_equal(parsed_ascii_data.first.first.encoding, Encoding::ASCII_8BIT)
+    end
+  end
 end

@@ -9,11 +9,42 @@ static VALUE rcsv_parse_error; /* class Rcsv::ParseError << StandardError; end *
 #define RAISE_WITH_LOCATION(row, column, contents, fmt, ...) \
   rb_raise(rcsv_parse_error, "[%d:%d '%s'] " fmt, (int)(row), (int)(column), (char *)(contents), ##__VA_ARGS__);
 
+/* String encoding is only available in Ruby 1.9+ */
+#ifdef HAVE_RUBY_ENCODING_H
+
+#include <ruby/encoding.h>
+
+#define RB_ENC_FIND_INDEX(encoding) \
+  rb_enc_find_index(encoding)
+
+#define ENCODED_STR_NEW(str, length, enc_index)  \
+  ({ \
+  VALUE _string = rb_str_new(str, length); \
+  if (enc_index != -1) { \
+    rb_enc_associate_index(_string, enc_index); \
+  } \
+  _string; \
+  })
+
+#else
+
+#define RB_ENC_FIND_INDEX(encoding) \
+  ({ \
+  rb_raise(rcsv_parse_error, "Character encodings are unavailable in your ruby version!"); \
+  -1; \
+  })
+
+#define ENCODED_STR_NEW(str, length, enc_index)  \
+  rb_str_new(str, length)
+
+#endif
+
 struct rcsv_metadata {
   /* Derived from user-specified options */
   bool row_as_hash;           /* Used to return array of hashes rather than array of arrays */
   bool empty_field_is_nil;    /* Do we convert empty fields to nils? */
   size_t offset_rows;         /* Number of rows to skip before parsing */
+  int encoding_index;         /* If available, the encoding index of the original input */
 
   char * row_conversions;     /* A pointer to string/array of row conversions char specifiers */
   VALUE * only_rows;          /* A pointer to array of row filters */
@@ -72,14 +103,14 @@ void end_of_field_callback(void * field, size_t field_size, void * data) {
         if (meta->empty_field_is_nil || field_str == NULL) {
           parsed_field = Qnil;
         } else {
-          parsed_field = rb_str_new2("");
+          parsed_field = ENCODED_STR_NEW("", 0, meta->encoding_index);
         }
       }
     } else {
       if (meta->current_col < meta->num_row_conversions) {
         switch (row_conversion){
           case 's': /* String */
-            parsed_field = rb_str_new(field_str, field_size); 
+            parsed_field = ENCODED_STR_NEW(field_str, field_size, meta->encoding_index); 
             break;
           case 'i': /* Integer */
             parsed_field = INT2NUM(atol(field_str));
@@ -118,7 +149,7 @@ void end_of_field_callback(void * field, size_t field_size, void * data) {
             );
         }
       } else { /* No conversion happens */
-        parsed_field = rb_str_new(field_str, field_size); /* field */
+        parsed_field = ENCODED_STR_NEW(field_str, field_size, meta->encoding_index); /* field */
       }
     }
 
@@ -302,6 +333,12 @@ VALUE rcsv_raw_parse(VALUE ensure_container) {
     meta->offset_rows = (size_t)NUM2INT(option);
   }
 
+  /* Specify the character encoding of the input data */
+  option = rb_hash_aref(options, ID2SYM(rb_intern("output_encoding")));
+  if (option && (option != Qnil)) {
+    meta->encoding_index = RB_ENC_FIND_INDEX(StringValueCStr(option));
+  }
+
   /* :only_rows is a list of values where row is only parsed
      if its fields match those in the passed array.
      [nil, nil, ["ABC", nil, 1]] skips all rows where 3rd column isn't equal to "ABC", nil or 1 */
@@ -421,6 +458,7 @@ static VALUE rb_rcsv_raw_parse(int argc, VALUE * argv, VALUE self) {
   meta.row_as_hash = false;
   meta.empty_field_is_nil = false;
   meta.skip_current_row = false;
+  meta.encoding_index = -1;
   meta.num_columns = 0;
   meta.current_col = 0;
   meta.current_row = 0;

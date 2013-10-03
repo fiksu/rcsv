@@ -42,6 +42,10 @@ class Rcsv
       raise ParseError.new("Supplied CSV object #{inspected_csv_data[0..127]}#{inspected_csv_data.size > 128 ? '...' : ''} is neither String nor looks like IO object.")
     end
 
+    if csv_data.respond_to?(:external_encoding)
+      raw_options[:output_encoding] = csv_data.external_encoding.to_s
+    end
+
     initial_position = csv_data.pos
 
     case options[:header]

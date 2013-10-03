@@ -32,7 +32,27 @@ class RcsvRawParseTest < Test::Unit::TestCase
     assert_equal('""C81E-=; **ECCB; .. 89', raw_parsed_tsv_data[3][6])
     assert_equal("Dallas\t TX", raw_parsed_tsv_data[888][13])
   end
+  
+  if String.instance_methods.include?(:encoding)
+    def test_rcsv_output_encoding_default
+      raw_parsed_csv_data = Rcsv.raw_parse(@csv_data)
+    
+      assert_equal(raw_parsed_csv_data[0][2].encoding, Encoding::ASCII_8BIT)
+    end
 
+    def test_rcsv_output_encoding_utf8
+      raw_parsed_csv_data = Rcsv.raw_parse(@csv_data, :output_encoding => "UTF-8")
+      
+      assert_equal(raw_parsed_csv_data[0][2].encoding, Encoding::UTF_8)
+    end
+  else
+    def test_rcsv_encoding_unavailable
+      assert_raise Rcsv::ParseError do
+        Rcsv.raw_parse(@csv_data, :output_encoding => "UTF-8")
+      end
+    end
+  end
+    
   def test_buffer_size
     raw_parsed_csv_data = Rcsv.raw_parse(@csv_data, :buffer_size => 10)
 
