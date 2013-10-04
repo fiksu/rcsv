@@ -113,7 +113,7 @@ void end_of_field_callback(void * field, size_t field_size, void * data) {
             parsed_field = ENCODED_STR_NEW(field_str, field_size, meta->encoding_index); 
             break;
           case 'i': /* Integer */
-            parsed_field = INT2NUM(atol(field_str));
+            parsed_field = LL2NUM(atoll(field_str));
             break;
           case 'f': /* Float */
             parsed_field = rb_float_new(atof(field_str));

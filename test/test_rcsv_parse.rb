@@ -14,7 +14,7 @@ class RcsvParseTest < Test::Unit::TestCase
   end
 
   def test_rcsv_parse_unknown_rows
-    csv = "a,b,c,d,e\n1,2,3,4,5"
+    csv = "a,b,c,d,e,f\n1,2,3,4,5,161226289488"
     parsed_data = Rcsv.parse(csv,
       :row_as_hash => true,
       :columns => {
@@ -23,6 +23,9 @@ class RcsvParseTest < Test::Unit::TestCase
           :alias => 'B'
         },
         'd' => {
+          :type => :int
+        },
+        'f' => {
           :type => :int
         }
       }
@@ -33,7 +36,8 @@ class RcsvParseTest < Test::Unit::TestCase
       'B' => 2,
       'c' => '3',
       'd' => 4,
-      'e' => '5'
+      'e' => '5',
+      'f' => 161226289488,
     }, parsed_data.first)
   end
 
@@ -57,7 +61,7 @@ class RcsvParseTest < Test::Unit::TestCase
   end
 
   def test_rcsv_parse_only_rows_not_match
-    csv = "a,1,t\nb,2,false\nc,3,0"
+    csv = "a,1,t,8\nb,2,false,10000000000\nc,3,0,99999999999999\nd,14,false,161226289488"
     parsed_data = Rcsv.parse(csv,
       :header => :none,
       :columns => [
@@ -70,11 +74,15 @@ class RcsvParseTest < Test::Unit::TestCase
         {
           :not_match => true,
           :type => :bool
-        }
+        },
+        {
+          :not_match => 161226289488,
+          :type => :int
+        },
       ]
     )
 
-    assert_equal([["b", 2, false], ["c", 3, false]], parsed_data)
+    assert_equal([["b", 2, false, 10000000000], ["c", 3, false, 99999999999999]], parsed_data)
   end
 
   if String.instance_methods.include?(:encoding)

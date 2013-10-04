@@ -84,7 +84,7 @@ class RcsvRawParseTest < Test::Unit::TestCase
     broken_data = StringIO.new(@csv_data.read.sub(/"/, ''))
 
     raw_parsed_csv_data = Rcsv.raw_parse(broken_data, :nostrict => true)
-    assert_equal(["DSAdsfksjh", "iii ooo iii", "EDADEDADEDADEDADEDADEDAD", "111 333 555", "NMLKTF", "---==---", "//", "###", "0000000000", "Asdad bvd qwert", ";'''sd", "@@@", "OCTZ", "$$$908080", "\",true/false\nC85A5B9F,85259637,,96,6838,1983-06-14,\"\"\"C4CA-=; **1679; .. 79", "210,11", "908e", "1281-03-09", "7257.4654049904275", "20efe749-50fe-4b6a-a603-7f9cd1dc6c6d", "3", "New York, NY", "u", "2.228169203286535", "t"], raw_parsed_csv_data.first)
+    assert_equal(["DSAdsfksjh", "iii ooo iii", "EDADEDADEDADEDADEDADEDAD", "111 333 555", "NMLKTF", "---==---", "//", "###", "0000000000", "Asdad bvd qwert", ";'''sd", "@@@", "OCTZ", "$$$908080", "\",true/false\nC85A5B9F,852596378467291748,,96,6838,1983-06-14,\"\"\"C4CA-=; **1679; .. 79", "210,11", "908e", "1281-03-09", "7257.4654049904275", "20efe749-50fe-4b6a-a603-7f9cd1dc6c6d", "3", "New York, NY", "u", "2.228169203286535", "t"], raw_parsed_csv_data.first)
   end
 
   def test_only_rows
@@ -135,6 +135,7 @@ class RcsvRawParseTest < Test::Unit::TestCase
 
     assert_equal(nil, raw_parsed_csv_data[0][2])
     assert_equal(96, raw_parsed_csv_data[0][3])
+    assert_equal(852596378467291748, raw_parsed_csv_data[0][1])
     assert_equal('908e', raw_parsed_csv_data[0][8])
     assert_equal(-9.549296585513721, raw_parsed_csv_data[1][15])
     assert_equal('2015-12-22', raw_parsed_csv_data[3][5])
@@ -182,7 +183,7 @@ class RcsvRawParseTest < Test::Unit::TestCase
 
     assert_equal({
       'DSAdsfksjh' => 'C85A5B9F',
-      'iii ooo iii' => '85259637',
+      'iii ooo iii' => '852596378467291748',
       'EDADEDADEDADEDADEDADEDAD' => nil,
       '111 333 555' => '96',
       'NMLKTF' => '6838',
@@ -246,7 +247,7 @@ class RcsvRawParseTest < Test::Unit::TestCase
     assert_equal(nil, result)
     assert_equal({
       'DSAdsfksjh' => 'C85A5B9F',
-      'iii ooo iii' => '85259637',
+      'iii ooo iii' => '852596378467291748',
       'EDADEDADEDADEDADEDADEDAD' => nil,
       '111 333 555' => '96',
       'NMLKTF' => '6838',
