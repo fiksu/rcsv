@@ -50,15 +50,18 @@ class Rcsv
 
     initial_position = csv_data.pos
 
+    first_line = csv_data.each_line.first
+    return [] if first_line.nil?
+
     case options[:header]
     when :use
-      header = self.raw_parse(StringIO.new(csv_data.each_line.first), raw_options).first
+      header = self.raw_parse(StringIO.new(first_line), raw_options).first
       raw_options[:offset_rows] += 1
     when :skip
-      header = (0..(csv_data.each_line.first.split(raw_options[:col_sep]).count)).to_a
+      header = (0..(first_line.split(raw_options[:col_sep]).count)).to_a
       raw_options[:offset_rows] += 1
     when :none
-      header = (0..(csv_data.each_line.first.split(raw_options[:col_sep]).count)).to_a
+      header = (0..(first_line.split(raw_options[:col_sep]).count)).to_a
     end
 
     raw_options[:row_as_hash] = options[:row_as_hash] # Setting after header parsing

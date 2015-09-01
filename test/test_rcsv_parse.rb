@@ -13,6 +13,10 @@ class RcsvParseTest < Test::Unit::TestCase
     }
   end
 
+  def test_rcsv_parse_empty
+    assert_equal [], Rcsv.parse('')
+  end
+
   def test_rcsv_parse_unknown_rows
     csv = "a,b,c,d,e,f\n1,2,3,4,5,161226289488"
     parsed_data = Rcsv.parse(csv,
