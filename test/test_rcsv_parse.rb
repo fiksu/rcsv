@@ -85,6 +85,24 @@ class RcsvParseTest < Test::Unit::TestCase
     assert_equal([["b", 2, false, 10000000000], ["c", 3, false, 99999999999999]], parsed_data)
   end
 
+  def test_rcsv_non_file_io_object
+    csv, writer = IO.pipe
+
+    writer.write("a,b,c\n1,2,3\n")
+    writer.close
+
+    parsed_data = Rcsv.parse(csv,
+      :header => :use,
+      :row_as_hash => true,
+      :columns => {}
+    )
+    assert_equal({
+      'a' => '1',
+      'b' => '2',
+      'c' => '3'
+    }, parsed_data.first)
+  end
+
   if String.instance_methods.include?(:encoding)
     def test_rcsv_parse_encoding
       utf8_csv = "a,b,c".force_encoding("UTF-8")
