@@ -1,5 +1,6 @@
 require "rcsv/rcsv"
 require "rcsv/version"
+require "rcsv/rewindable"
 
 require "stringio"
 require "English"
@@ -39,7 +40,7 @@ class Rcsv
 
     if csv_data.is_a?(String)
       csv_data = StringIO.new(csv_data)
-    elsif !(csv_data.respond_to?(:each_line) && csv_data.respond_to?(:read))
+    elsif !(csv_data.respond_to?(:read))
       inspected_csv_data = csv_data.inspect
       raise ParseError.new("Supplied CSV object #{inspected_csv_data[0..127]}#{inspected_csv_data.size > 128 ? '...' : ''} is neither String nor looks like IO object.")
     end
@@ -48,17 +49,17 @@ class Rcsv
       raw_options[:output_encoding] = csv_data.external_encoding.to_s
     end
 
-    initial_position = csv_data.pos
+    csv_data = Rewindable.new(csv_data)
 
     case options[:header]
     when :use
-      header = self.raw_parse(StringIO.new(csv_data.each_line.first), raw_options).first
+      header = self.raw_parse(StringIO.new(csv_data.first_line), raw_options).first
       raw_options[:offset_rows] += 1
     when :skip
-      header = (0..(csv_data.each_line.first.split(raw_options[:col_sep]).count)).to_a
+      header = (0..(csv_data.first_line.split(raw_options[:col_sep]).count)).to_a
       raw_options[:offset_rows] += 1
     when :none
-      header = (0..(csv_data.each_line.first.split(raw_options[:col_sep]).count)).to_a
+      header = (0..(csv_data.first_line.split(raw_options[:col_sep]).count)).to_a
     end
 
     raw_options[:row_as_hash] = options[:row_as_hash] # Setting after header parsing
@@ -133,7 +134,6 @@ class Rcsv
       raw_options[:row_conversions] = row_conversions
     end
 
-    csv_data.pos = initial_position
     return self.raw_parse(csv_data, raw_options, &block)
   end
 

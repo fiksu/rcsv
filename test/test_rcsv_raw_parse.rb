@@ -277,7 +277,24 @@ class RcsvRawParseTest < Test::Unit::TestCase
       'booleator' => 't'
     }, raw_parsed_csv_data[1])
   end
+end
 
+class NonFileIOTest < RcsvRawParseTest
+  def setup
+    reader, writer = IO.pipe
+    Thread.new do
+      f = File.open('test/test_rcsv.csv')
+      while d = f.read((rand * 100).to_i)
+        writer.write(d)
+        writer.flush
+      end
+      writer.close
+    end.abort_on_exception
+    @csv_data = reader
+  end
+end
+
+class RcsvRawParseSpacesAndNilTest < Test::Unit::TestCase
   def test_nils_and_empty_strings_default
     raw_parsed_csv_data = Rcsv.raw_parse(StringIO.new(",\"\",,   ,,\n,,  \"\", \"\" ,,"))
 
