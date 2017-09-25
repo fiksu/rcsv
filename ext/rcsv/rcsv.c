@@ -444,7 +444,9 @@ VALUE rcsv_raw_parse(VALUE ensure_container) {
   }
 
   /* Flushing libcsv's buffer */
-  csv_fini(cp, &end_of_field_callback, &end_of_line_callback, meta);
+  if (csv_fini(cp, &end_of_field_callback, &end_of_line_callback, meta) == -1) {
+    rb_raise(rcsv_parse_error, "No end-quote was seen");
+  }
 
   return Qnil;
 }

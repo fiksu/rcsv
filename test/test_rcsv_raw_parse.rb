@@ -99,6 +99,21 @@ class RcsvRawParseTest < Test::Unit::TestCase
     assert_equal(["DSAdsfksjh", "iii ooo iii", "EDADEDADEDADEDADEDADEDAD", "111 333 555", "NMLKTF", "---==---", "//", "###", "0000000000", "Asdad bvd qwert", ";'''sd", "@@@", "OCTZ", "$$$908080", "\",true/false\nC85A5B9F,852596378467291748,,96,6838,1983-06-14,\"\"\"C4CA-=; **1679; .. 79", "210,11", "908e", "1281-03-09", "7257.4654049904275", "20efe749-50fe-4b6a-a603-7f9cd1dc6c6d", "3", "New York, NY", "u", "2.228169203286535", "t"], raw_parsed_csv_data.first)
   end
 
+  def test_unclosed_quote
+    broken_data = StringIO.new("aa,bb\ncc,\"dd")
+
+    assert_raise(Rcsv::ParseError) do
+      Rcsv.raw_parse(broken_data)
+    end
+  end
+
+  def test_unclosed_quote_without_strict
+    broken_data = StringIO.new("aa,bb\ncc,\"dd")
+
+    raw_parsed_csv_data = Rcsv.raw_parse(broken_data, :nostrict => true)
+    assert_equal([["aa", "bb"], ["cc", "dd"]], raw_parsed_csv_data)
+  end
+
   def test_only_rows
     raw_parsed_csv_data = Rcsv.raw_parse(@csv_data, :only_rows => [['GBP', 'NO SUCH THING']])
 
