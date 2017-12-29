@@ -41,6 +41,62 @@ class RcsvParseTest < Test::Unit::TestCase
     }, parsed_data.first)
   end
 
+  def test_rcsv_parse_with_offset
+    csv = "a,b,c,d,e,f\n1,2,3,4,5,161226289488\n6,7,8,9,10,161226289488"
+    parsed_data = Rcsv.parse(csv,
+      :row_as_hash => true,
+      :offset_rows => 2,
+      :columns => {
+        'b' => {
+          :type => :int,
+        },
+        'd' => {
+          :type => :int
+        },
+        'f' => {
+          :type => :int
+        }
+      }
+    )
+
+    assert_equal({
+      'a' => '6',
+      'b' => 7,
+      'c' => '8',
+      'd' => 9,
+      'e' => '10',
+      'f' => 161226289488,
+    }, parsed_data.first)
+  end
+
+  def test_rcsv_parse_with_offset_zero
+    csv = "a,b,c,d,e,f\n1,2,3,4,5,161226289488"
+    parsed_data = Rcsv.parse(csv,
+      :row_as_hash => true,
+      :offset_rows => 0,
+      :columns => {
+        'b' => {
+          :type => :int,
+        },
+        'd' => {
+          :type => :int
+        },
+        'f' => {
+          :type => :int
+        }
+      }
+    )
+
+    assert_equal({
+      'a' => '1',
+      'b' => 2,
+      'c' => '3',
+      'd' => 4,
+      'e' => '5',
+      'f' => 161226289488,
+    }, parsed_data.first)
+  end
+
   def test_rcsv_parse_only_rows
     csv = "a,1,t\nb,2,false\nc,3,0"
     parsed_data = Rcsv.parse(csv,
